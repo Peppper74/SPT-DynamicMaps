@@ -5,12 +5,15 @@ using System.Linq;
 using DynamicMaps.Data;
 using DynamicMaps.Utils;
 using EFT.UI;
+using Il2CppInterop.Runtime;
 using UnityEngine;
 
 namespace DynamicMaps.UI.Controls
 {
     public class MapSelectDropdown : MonoBehaviour
     {
+        public MapSelectDropdown(IntPtr ptr) : base(ptr) { }
+
         private static readonly HashSet<string> AcceptableExtensions = new HashSet<string>{ "json", "jsonc" };
 
         public event Action<MapDef> OnMapSelected;
@@ -56,10 +59,16 @@ namespace DynamicMaps.UI.Controls
 
             _selectableMapDefs = mapDefs.ToList();
 
-            _dropdown.Show(_selectableMapDefs.Select(def => def.DisplayName));
+            var displayNames = new Il2CppSystem.Collections.Generic.List<string>();
+            foreach (var mapDef in _selectableMapDefs)
+            {
+                displayNames.Add(mapDef.DisplayName);
+            }
+            _dropdown.Show(displayNames);
 
             // TODO: this references a BSG method of GInterface390
-            _dropdown.OnValueChanged.Subscribe(OnSelectDropdownMap);
+            _dropdown.OnValueChanged.Subscribe(
+                DelegateSupport.ConvertDelegate<Il2CppSystem.Action<int>>((Action<int>)OnSelectDropdownMap));
 
             gameObject.SetActive(_selectableMapDefs.Count > 1);
         }
@@ -142,7 +151,9 @@ namespace DynamicMaps.UI.Controls
 
         public void OnLoadMap(MapDef mapDef)
         {
-            _dropdown.UpdateValue(_selectableMapDefs.IndexOf(mapDef));
+            // EFT's IL2CPP BaseDropDownBox.UpdateValue wrapper throws when called from
+            // this injected component. Map selection itself is already handled by the
+            // dropdown callback; avoid failing the whole map display here.
         }
 
         public bool IsDropdownOpen()

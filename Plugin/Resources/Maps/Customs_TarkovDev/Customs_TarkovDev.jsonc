@@ -12,7 +12,7 @@
   "Layers": {
     "Underground": {
       "Level": -1,
-      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Underground_Level.svg",
+      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Underground_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -372, "y": -306},
@@ -51,7 +51,7 @@
     },
     "Ground Floor": {
       "Level": 0,
-      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Ground_Level.svg",
+      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Ground_Level.png",
       "TesselationIndex": 1,
       "ImageBounds": {
         "Min": {"x": -372, "y": -306},
@@ -66,7 +66,7 @@
     },
     "2nd Floor": {
       "Level": 1,
-      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Second_Floor.svg",
+      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Second_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -372, "y": -306},
@@ -145,7 +145,7 @@
     },
     "3rd Floor": {
       "Level": 2,
-      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Third_Floor.svg",
+      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Third_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -372, "y": -306},
@@ -172,7 +172,7 @@
     },
     "4th Floor": {
       "Level": 3,
-      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Fourth_Floor.svg",
+      "ImagePath": "Maps/Customs_TarkovDev/Layers/Customs-Fourth_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -372, "y": -306},

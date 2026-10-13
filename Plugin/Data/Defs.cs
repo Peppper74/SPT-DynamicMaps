@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using System.Text.Json;
 using UnityEngine;
 
 namespace DynamicMaps.Data
@@ -20,32 +20,20 @@ namespace DynamicMaps.Data
 
     public class MapLayerDef
     {
-        [JsonRequired]
         public int Level { get; set; }
-
-        [JsonRequired]
         public string ImagePath { get; set; }
-        
-        [JsonRequired]
         public int TesselationIndex { get; set; }
-
-        [JsonRequired]
         public BoundingRectangle ImageBounds { get; set; }
-
-        [JsonRequired]
         public List<BoundingRectangularSolid> GameBounds { get; set; }
     }
 
     public class MapMarkerDef
     {
         public string Text { get; set; } = "";
-
-        [JsonRequired]
         public string ImagePath { get; set; }
-
-        [JsonRequired]
         public Vector3 Position { get; set; }
 
+        [System.Text.Json.Serialization.JsonIgnore]
         public Sprite Sprite { get; set; }
         public bool ShowInRaid { get; set; } = true;
         public string Category { get; set; } = "None";
@@ -56,10 +44,7 @@ namespace DynamicMaps.Data
 
     public class MapLabelDef
     {
-        [JsonRequired]
         public string Text { get; set; }
-
-        [JsonRequired]
         public Vector3 Position { get; set; }
 
         public float FontSize { get; set; } = 14f;
@@ -70,13 +55,8 @@ namespace DynamicMaps.Data
 
     public class MapDef
     {
-        [JsonRequired]
         public string DisplayName { get; set; }
-
-        [JsonRequired]
         public BoundingRectangle Bounds { get; set; }
-
-        [JsonRequired]
         public Dictionary<string, MapLayerDef> Layers { get; set; } = new Dictionary<string, MapLayerDef>();
 
         public List<string> MapInternalNames { get; set; } = new List<string>();
@@ -92,13 +72,21 @@ namespace DynamicMaps.Data
         {
             try
             {
-                return JsonConvert.DeserializeObject<MapDef>(File.ReadAllText(absolutePath));
+                // EFT ships JsonConvert as an IL2CPP proxy; its generated generic overload
+                // cannot deserialize managed plugin DTOs. Use the managed .NET serializer.
+                var options = new JsonSerializerOptions
+                {
+                    AllowTrailingCommas = true,
+                    IncludeFields = true,
+                    PropertyNameCaseInsensitive = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip
+                };
+                return JsonSerializer.Deserialize(File.ReadAllText(absolutePath), typeof(MapDef), options) as MapDef;
             }
             catch (Exception e)
             {
                 Plugin.Log.LogError($"Loading MapMappingDef failed from json at path: {absolutePath}");
-                Plugin.Log.LogError($"Exception given was: {e.Message}");
-                Plugin.Log.LogError($"{e.StackTrace}");
+                Plugin.Log.LogError($"Exception given was: {e}");
             }
 
             return null;

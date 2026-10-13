@@ -13,6 +13,8 @@ namespace DynamicMaps.UI.Components
 {
     public class MapView : MonoBehaviour
     {
+        public MapView(System.IntPtr ptr) : base(ptr) { }
+
         private static Vector2 _markerSize = new Vector2(30, 30);
         private static float _zoomMaxScaler = 10f;  // multiplier against zoomMin
         private static float _zoomMinScaler = 1.1f; // divider against ratio of a provided rect
@@ -48,7 +50,11 @@ namespace DynamicMaps.UI.Components
         public static MapView Create(GameObject parent, string name)
         {
             var go = UIUtils.CreateUIGameObject(parent, name);
-            go.AddComponent<Canvas>();
+            var canvas = go.AddComponent<Canvas>();
+            // EFT/Unity UI now places this nested canvas behind the inventory canvas
+            // unless it has its own sorting order. Keep the map above the game UI.
+            canvas.overrideSorting = true;
+            canvas.sortingOrder = 1000;
             go.AddComponent<GraphicRaycaster>();
 
             var view = go.AddComponent<MapView>();

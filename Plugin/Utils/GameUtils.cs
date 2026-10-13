@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
-using SPT.Reflection.Utils;
+using SPTushonka.Reflection.Utils;
 using Comfort.Common;
 using DynamicMaps.Config;
 using EFT;
@@ -17,9 +17,6 @@ namespace DynamicMaps.Utils
     public static class GameUtils
     {
         // reflection        
-        private static FieldInfo _playerCorpseField = AccessTools.Field(typeof(Player), "Corpse");
-        private static FieldInfo _playerLastAggressorField = AccessTools.Field(typeof(Player), "LastAggressor");
-        
         private static Type _profileInterface = typeof(IEftSession).GetInterfaces().First(i =>
             {
                 var properties = i.GetProperties();
@@ -148,23 +145,41 @@ namespace DynamicMaps.Utils
 
         public static bool IsPMC(this IPlayer player)
         {
-            return player.Profile.Side == EPlayerSide.Bear || player.Profile.Side == EPlayerSide.Usec;
+            if (player == null) return false;
+
+            // SPT can represent AI PMC profiles with Savage as the side while the
+            // actual faction is encoded in the WildSpawnType role (pmcBEAR/pmcUSEC).
+            var role = player.Profile.Info.Settings.Role.ToString();
+            return player.Profile.Side == EPlayerSide.Bear
+                || player.Profile.Side == EPlayerSide.Usec
+                || role.Contains("pmc", StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool IsScav(this IPlayer player)
         {
-            return player.Profile.Side == EPlayerSide.Savage;
+            return player != null
+                && player.Profile.Side == EPlayerSide.Savage
+                && !player.IsPMC();
+        }
+
+        public static bool IsBearPMC(this IPlayer player)
+        {
+            if (player == null) return false;
+
+            var role = player.Profile.Info.Settings.Role.ToString();
+            return player.Profile.Side == EPlayerSide.Bear
+                || role.Contains("bear", StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool DidMainPlayerKill(this IPlayer player)
         {
-            var aggressor = _playerLastAggressorField.GetValue(player) as IPlayer;
-            if (aggressor == null)
+            var aggressor = (player as Player)?.LastAggressor;
+            var mainPlayer = GetMainPlayer();
+            if (aggressor == null || mainPlayer == null)
             {
                 return false;
             }
 
-            var mainPlayer = GetMainPlayer();
             if (aggressor.ProfileId == mainPlayer.ProfileId)
             {
                 return true;
@@ -175,14 +190,14 @@ namespace DynamicMaps.Utils
 
         public static bool DidTeammateKill(this IPlayer player)
         {
-            var aggressor = _playerLastAggressorField.GetValue(player) as IPlayer;
-            if (aggressor == null || string.IsNullOrEmpty(aggressor.GroupId))
+            var aggressor = (player as Player)?.LastAggressor;
+            var mainPlayer = GetMainPlayer();
+            if (aggressor == null || mainPlayer == null || string.IsNullOrEmpty(aggressor.GroupId))
             {
                 return false;
             }
 
-            var mainPlayer = GetMainPlayer();
-            if (aggressor.ProfileId != mainPlayer.ProfileId && aggressor.GroupId == GetMainPlayer().GroupId)
+            if (aggressor.ProfileId != mainPlayer.ProfileId && aggressor.GroupId == mainPlayer.GroupId)
             {
                 return true;
             }
@@ -198,7 +213,7 @@ namespace DynamicMaps.Utils
 
         public static bool HasCorpse(this Player player)
         {
-            return _playerCorpseField.GetValue(player) != null;
+            return player?.Corpse != null;
         }
 
         public static bool IsHeadlessClient(this IPlayer player)

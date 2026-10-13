@@ -4,6 +4,8 @@ namespace DynamicMaps.UI.Controls
 {
     public class CursorPositionText : AbstractTextControl
     {
+        public CursorPositionText(System.IntPtr ptr) : base(ptr) { }
+
         private RectTransform _mapViewTransform;
 
         public static CursorPositionText Create(GameObject parent, RectTransform mapViewTransform, float fontSize)

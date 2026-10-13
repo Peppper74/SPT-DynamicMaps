@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BepInEx.Configuration;
 using DynamicMaps.ExternalModSupport;
@@ -48,6 +48,7 @@ namespace DynamicMaps.Config
         public static ConfigEntry<bool> ShowSecretPointsInRaid;
         public static ConfigEntry<bool> ShowDroppedBackpackInRaid;
         public static ConfigEntry<bool> ShowWishListItemsInRaid;
+        public static ConfigEntry<bool> ShowOnlyOtherWishListItemsInRaid;
         public static ConfigEntry<bool> ShowBTRInRaid;
         public static ConfigEntry<bool> ShowAirdropsInRaid;
         public static ConfigEntry<bool> ShowHiddenStashesInRaid;
@@ -141,6 +142,8 @@ namespace DynamicMaps.Config
 
         public static void Init(ConfigFile config)
         {
+            KeyboardShortcut.RegisterConfigConverter();
+
             #region General
 
             ConfigEntries.Add(ReplaceMapScreen = config.Bind(
@@ -388,6 +391,14 @@ namespace DynamicMaps.Config
                 true,
                 new ConfigDescription(
                     "Shows items that are in your wishlist on the map in raid",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+            ConfigEntries.Add(ShowOnlyOtherWishListItemsInRaid = config.Bind(
+                DynamicMarkerTitle,
+                "Only show wishlist items from Other category",
+                false,
+                new ConfigDescription(
+                    "When enabled, only wishlist items in the Other category are shown on the map",
                     null,
                     new ConfigurationManagerAttributes { })));
 

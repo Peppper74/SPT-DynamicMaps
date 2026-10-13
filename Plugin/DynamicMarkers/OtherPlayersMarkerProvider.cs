@@ -254,7 +254,7 @@ namespace DynamicMaps.DynamicMarkers
             {
                 category = _enemyPlayerCategory;
                 imagePath = _enemyPlayerImagePath;
-                color = player.Side == EPlayerSide.Bear
+                color = player.IsBearPMC()
                     ? Settings.PmcBearColor.Value
                     : Settings.PmcUsecColor.Value;
                     

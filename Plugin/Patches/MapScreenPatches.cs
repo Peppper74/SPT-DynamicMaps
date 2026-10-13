@@ -1,6 +1,6 @@
 using System;
 using System.Reflection;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using DynamicMaps.Config;
 using DynamicMaps.Utils;
 using EFT.UI.Map;
@@ -15,29 +15,30 @@ namespace DynamicMaps.Patches
             return AccessTools.Method(typeof(MapScreen), nameof(MapScreen.Show));
         }
 
-        [PatchPrefix]
-        public static bool PatchPrefix()
+        [PatchPostfix]
+        public static void PatchPostfix(MapScreen __instance)
         {
             try
             {
-                if (!Settings.ReplaceMapScreen.Value || !GameUtils.ShouldShowMapInRaid())
+                // Let EFT perform its SPT 5 screen activation first, then replace its map contents.
+                if (Plugin.Instance.Map == null && __instance != null)
                 {
-                    // mod is disabled
-                    Plugin.Instance.Map?.OnMapScreenClose();
-                    return true;
+                    Plugin.Instance.TryAttachToMapScreen(__instance);
                 }
 
-                // show instead
+                if (!Settings.ReplaceMapScreen.Value || !GameUtils.ShouldShowMapInRaid())
+                {
+                    Plugin.Instance.Map?.OnMapScreenClose();
+                    return;
+                }
+
                 Plugin.Instance.Map?.OnMapScreenShow();
-                return false;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Plugin.Log.LogError($"Caught error while trying to show map");
                 Plugin.Log.LogError($"{e.Message}");
                 Plugin.Log.LogError($"{e.StackTrace}");
-
-                return true;
             }
         }
     }
@@ -49,28 +50,21 @@ namespace DynamicMaps.Patches
             return AccessTools.Method(typeof(MapScreen), nameof(MapScreen.Close));
         }
 
-        [PatchPrefix]
-        public static bool PatchPrefix()
+        [PatchPostfix]
+        public static void PatchPostfix()
         {
             try
             {
-                if (!Settings.ReplaceMapScreen.Value || !GameUtils.ShouldShowMapInRaid())
+                if (Settings.ReplaceMapScreen.Value && GameUtils.ShouldShowMapInRaid())
                 {
-                    // mod is disabled
-                    return true;
+                    Plugin.Instance.Map?.OnMapScreenClose();
                 }
-
-                // close instead
-                Plugin.Instance.Map?.OnMapScreenClose();
-                return false;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Plugin.Log.LogError($"Caught error while trying to close map");
                 Plugin.Log.LogError($"{e.Message}");
                 Plugin.Log.LogError($"{e.StackTrace}");
-
-                return true;
             }
         }
     }

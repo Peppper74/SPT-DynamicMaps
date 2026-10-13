@@ -1,12 +1,12 @@
-﻿using DynamicMaps.UI;
+using DynamicMaps.UI;
 using DynamicMaps.Utils;
 using EFT.UI;
 using EFT.UI.Map;
 using HarmonyLib;
-using Newtonsoft.Json;
-using SPT.Common.Http;
-using SPT.Reflection.Patching;
-using SPT.Reflection.Utils;
+using System.Text.Json;
+using SPTushonka.Common.Http;
+using SPTushonka.Reflection.Patching;
+using SPTushonka.Reflection.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,9 +24,10 @@ namespace DynamicMaps.Patches
 
         protected override MethodBase GetTargetMethod()
         {
-            return PatchConstants.EftTypes
-                .SingleCustom(x => x.GetField("Taxonomy", BindingFlags.Public | BindingFlags.Instance) != null)
-                .GetMethod("Create", BindingFlags.Public | BindingFlags.Static);
+            // In SPT 5 the old Taxonomy.Create menu hook no longer exists.
+            // MainMenuShowOperation.Init is the current entry point for loading the main menu.
+            return AccessTools.Method(typeof(EFT.MainMenuShowOperation), "Init", Type.EmptyTypes)
+                ?? throw new MissingMethodException(typeof(EFT.MainMenuShowOperation).FullName, "Init()");
         }
 
         [PatchPrefix]
@@ -37,7 +38,11 @@ namespace DynamicMaps.Patches
                 if (serverConfigLoaded == false)
                 {
                     serverConfigLoaded = true;
-                    ModdedMapScreen.ServerConfig = await LoadFromServer();
+                    ModdedMapScreen.ServerConfig = await LoadFromServer() ?? new DmServerConfig();
+
+                    // The map UI can be created before the request finishes. Refresh it once
+                    // the server-side marker permissions are available.
+                    Plugin.Instance?.Map?.ReadConfig();
 
                     Plugin.Log.LogInfo($"Loaded server config");
                 }
@@ -55,7 +60,12 @@ namespace DynamicMaps.Patches
             try
             {
                 string payload = await RequestHandler.GetJsonAsync("/dynamicmaps/load");
-                return JsonConvert.DeserializeObject<DmServerConfig>(payload);
+                var options = new JsonSerializerOptions
+                {
+                    IncludeFields = true,
+                    PropertyNameCaseInsensitive = true
+                };
+                return JsonSerializer.Deserialize(payload, typeof(DmServerConfig), options) as DmServerConfig;
 
             }
             catch (Exception ex)

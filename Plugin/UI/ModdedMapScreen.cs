@@ -11,6 +11,7 @@ using DynamicMaps.Patches;
 using DynamicMaps.UI.Components;
 using DynamicMaps.UI.Controls;
 using DynamicMaps.Utils;
+using Il2CppInterop.Runtime;
 using DynamicMaps.ExternalModSupport;
 using EFT.UI;
 using UnityEngine;
@@ -23,9 +24,11 @@ namespace DynamicMaps.UI
 {
     public class ModdedMapScreen : MonoBehaviour
     {
+        public ModdedMapScreen(IntPtr ptr) : base(ptr) { }
+
         #region Variables and Declarations
         private EventHandler _adjustMiniMapHandler;
-        private UnityEngine.Events.UnityAction<Vector2> _scrollHandler;
+        private Action<Vector2> _scrollHandler;
         
         private const string MapRelPath = "Maps";
 
@@ -158,7 +161,8 @@ namespace DynamicMaps.UI
             _scrollRect.viewport = _scrollMask.GetRectTransform();
             _scrollRect.content = _mapView.RectTransform;
             _scrollHandler = (_) => _mapView.ClampToMapBounds();
-            _scrollRect.onValueChanged.AddListener(_scrollHandler);
+            _scrollRect.onValueChanged.AddListener(
+                DelegateSupport.ConvertDelegate<UnityEngine.Events.UnityAction<Vector2>>(_scrollHandler));
             _scrollRect.OnBeginDragCallback = () =>
             {
                 if (_mapView == null) 
@@ -198,14 +202,14 @@ namespace DynamicMaps.UI
             
             // load initial maps from path
             _mapSelectDropdown.LoadMapDefsFromPath(MapRelPath);
-            PrecacheMapLayerImages();
         }
 
         private void OnDestroy()
         {
             if (_scrollRect != null)
             {
-                _scrollRect.onValueChanged.RemoveListener(_scrollHandler);
+                _scrollRect.onValueChanged.RemoveListener(
+                    DelegateSupport.ConvertDelegate<UnityEngine.Events.UnityAction<Vector2>>(_scrollHandler));
                 _scrollRect.OnBeginDragCallback = null;
             }
             
@@ -324,8 +328,23 @@ namespace DynamicMaps.UI
             transform.parent.Find("MapBlock").gameObject.SetActive(false);
             transform.parent.Find("EmptyBlock").gameObject.SetActive(false);
             transform.parent.gameObject.SetActive(true);
+            transform.SetAsLastSibling();
 
             Show(false);
+            // EFT resets nested canvas sorting while changing inventory panels.
+            // Reapply it after the native screen transition, immediately before render.
+            var mapCanvas = _mapView.GetComponent<Canvas>();
+            mapCanvas.overrideSorting = true;
+            mapCanvas.sortingOrder = 32767;
+            mapCanvas.enabled = true;
+            var visibilityGroup = gameObject.GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
+            visibilityGroup.alpha = 1f;
+            visibilityGroup.ignoreParentGroups = true;
+            Plugin.Log.LogInfo($"Map screen visible={gameObject.activeInHierarchy}, parent={transform.parent.gameObject.activeInHierarchy}, map={_mapView.CurrentMapDef?.DisplayName}, layers={_mapView.MapLayerContainer.transform.childCount}, rect={RectTransform.rect.size}, mask={_scrollMask.GetRectTransform().rect.size}");
+
+            var layerImage = _mapView.MapLayerContainer.GetComponentInChildren<Image>(true);
+            var sprite = layerImage?.sprite;
+            Plugin.Log.LogInfo($"Map render diagnostic: viewActive={_mapView.gameObject.activeInHierarchy}, canvasEnabled={mapCanvas.enabled}, overrideSorting={mapCanvas.overrideSorting}, sortingOrder={mapCanvas.sortingOrder}, renderMode={mapCanvas.renderMode}, rootCanvas={mapCanvas.rootCanvas?.name}, imageEnabled={layerImage?.enabled}, sprite={sprite?.name}, texture={sprite?.texture?.width}x{sprite?.texture?.height}, imageRect={layerImage?.GetRectTransform().rect.size}");
         }
 
         internal void OnMapScreenClose()
@@ -899,6 +918,10 @@ namespace DynamicMaps.UI
 
         internal void ReadConfig()
         {
+            // MainMenuShowOperation.Init loads server settings asynchronously, while the
+            // CommonUI (and this screen) may be created before that request completes.
+            ServerConfig ??= new DmServerConfig();
+
             _centerPlayerShortcut = Settings.CenterOnPlayerHotkey.Value;
             _dumpShortcut = Settings.DumpInfoHotkey.Value;
 
@@ -1132,26 +1155,6 @@ namespace DynamicMaps.UI
                     Plugin.Log.LogError($"Dynamic marker provider {dynamicProvider} threw exception in ChangeMap");
                     Plugin.Log.LogError($"  Exception given was: {e.Message}");
                     Plugin.Log.LogError($"  {e.StackTrace}");
-                }
-            }
-        }
-
-        private void PrecacheMapLayerImages()
-        {
-            Singleton<CommonUI>.Instance.StartCoroutine(
-                PrecacheCoroutine(_mapSelectDropdown.GetMapDefs()));
-        }
-
-        private static IEnumerator PrecacheCoroutine(IEnumerable<MapDef> mapDefs)
-        {
-            foreach (var mapDef in mapDefs)
-            {
-                foreach (var layerDef in mapDef.Layers.Values)
-                {
-                    // just load sprite to cache it, one a frame
-                    Plugin.Log.LogInfo($"Precaching sprite: {layerDef.ImagePath}");
-                    SvgUtils.GetOrLoadCachedSprite(layerDef);
-                    yield return null;
                 }
             }
         }

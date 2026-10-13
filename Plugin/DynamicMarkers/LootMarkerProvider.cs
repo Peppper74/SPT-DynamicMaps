@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Linq;
 using Comfort.Common;
 using DynamicMaps.Config;
@@ -8,6 +8,7 @@ using DynamicMaps.Utils;
 using EFT;
 using EFT.Interactive;
 using EFT.UI.DragAndDrop;
+using Il2CppInterop.Runtime;
 
 namespace DynamicMaps.DynamicMarkers
 {
@@ -19,18 +20,7 @@ namespace DynamicMaps.DynamicMarkers
         public void OnShowInRaid(MapView map)
         {
             _lastMapView = map;
-            
-            var lootList = Singleton<GameWorld>.Instance.LootList;
-            
-            foreach (var item in lootList)
-            {
-                if (item is not LootItem loot) continue;
-                
-                if (GameUtils.GetWishListItems().Contains(new MongoID(loot.TemplateId)))
-                {
-                    TryAddMarker(loot);
-                }
-            }
+            AddWishlistedLootMarkers();
         }
 
         public void OnHideInRaid(MapView map)
@@ -46,13 +36,8 @@ namespace DynamicMaps.DynamicMarkers
         public void OnMapChanged(MapView map, MapDef mapDef)
         {
             _lastMapView = map;
-
-            // transition markers from last map to this one
-            foreach (var item in _lootMarkers.Keys.ToList())
-            {
-                TryRemoveMarker(item);
-                TryAddMarker(item);
-            }
+            TryRemoveMarkers();
+            AddWishlistedLootMarkers();
         }
 
         public void OnDisable(MapView map)
@@ -64,13 +49,28 @@ namespace DynamicMaps.DynamicMarkers
         {
             if (!GameUtils.IsInRaid()) return;
 
-            foreach (var item in _lootMarkers.Keys.ToList())
+            TryRemoveMarkers();
+            AddWishlistedLootMarkers();
+        }
+
+        private void AddWishlistedLootMarkers()
+        {
+            if (_lastMapView == null) return;
+
+            var gameWorld = Singleton<GameWorld>.Instance;
+            if (gameWorld == null) return;
+
+            var wishlist = GameUtils.PlayerProfile.WishlistManager.GetWishlist();
+            foreach (var item in gameWorld.LootList)
             {
-                TryRemoveMarker(item);
-                TryAddMarker(item);
+                if (item is not LootItem loot) continue;
+                if (!wishlist.TryGetValue(new MongoID(loot.TemplateId), out var group)) continue;
+                if (Settings.ShowOnlyOtherWishListItemsInRaid.Value && group != EWishlistGroup.Other) continue;
+
+                TryAddMarker(loot);
             }
         }
-        
+
         private void TryAddMarker(LootItem item)
         {
             if (item == null || item.Item == null)
@@ -80,7 +80,7 @@ namespace DynamicMaps.DynamicMarkers
             if (Settings.ShowWishListItemsIntelLevel.Value > GameUtils.GetIntelLevel()) return;
             
             var staticIcons = EFTHardSettings.Instance.StaticIcons;
-            var itemType = ItemViewFactory.GetItemType(item.Item.GetType());
+            var itemType = ItemViewFactory.GetItemType(Il2CppType.From(item.Item.GetType()));
             var itemSprite = staticIcons.ItemTypeSprites.GetValueOrDefault(itemType);
 
             var transform = item.transform;

@@ -12,7 +12,7 @@
   "Layers": {
     "Technical": {
       "Level": -1,
-      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_Technical_Level.svg",
+      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_Technical_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -292, "y": -441},
@@ -27,7 +27,7 @@
     },
     "First Level": {
       "Level": 0,
-      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_First_Level.svg",
+      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_First_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -292, "y": -441},
@@ -42,7 +42,7 @@
     },
     "Second Level": {
       "Level": 1,
-      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_Second_Level.svg",
+      "ImagePath": "Maps/Labs_TarkovDev/Layers/Labs_Second_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -292, "y": -441},

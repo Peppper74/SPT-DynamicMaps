@@ -9,6 +9,7 @@ using DynamicMaps.Utils;
 using EFT;
 using EFT.Interactive;
 using EFT.UI.DragAndDrop;
+using Il2CppInterop.Runtime;
 using UnityEngine;
 
 namespace DynamicMaps.DynamicMarkers
@@ -84,7 +85,7 @@ namespace DynamicMaps.DynamicMarkers
             {
                 var itemNetId = pair.Key;
                 var item = pair.Value;
-                var itemType = ItemViewFactory.GetItemType(item.GetType());
+                var itemType = ItemViewFactory.GetItemType(Il2CppType.From(item.GetType()));
 
                 // check if item is already in markers or is not a backpack and doesn't not exist as loot item in the world
                 if (_backpackMarkers.ContainsKey(itemNetId)
@@ -106,7 +107,7 @@ namespace DynamicMaps.DynamicMarkers
             }
 
             var itemNetId = lootItem.GetNetId();
-            var itemType = ItemViewFactory.GetItemType(lootItem.Item.GetType());
+            var itemType = ItemViewFactory.GetItemType(Il2CppType.From(lootItem.Item.GetType()));
 
             if (_backpackMarkers.ContainsKey(itemNetId)
                 || itemType != EItemType.Backpack

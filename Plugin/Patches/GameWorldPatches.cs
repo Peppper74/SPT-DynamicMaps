@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using EFT;
 using EFT.Interactive;
 using EFT.InventoryLogic;
@@ -22,6 +22,8 @@ namespace DynamicMaps.Patches
         [PatchPostfix]
         public static void PatchPostfix(GameWorld __instance)
         {
+            GameWorldOnDestroyPatch.Attach();
+
             // Credit to RaiRai for finding the hidden stash names
             var caches = LocationScene.GetAllObjects<LootableContainer>()
                 .Where( x => 
@@ -37,17 +39,20 @@ namespace DynamicMaps.Patches
         }
     }
     
-    internal class GameWorldOnDestroyPatch : ModulePatch
+    internal static class GameWorldOnDestroyPatch
     {
         internal static event Action OnRaidEnd;
 
-        protected override MethodBase GetTargetMethod()
+        private static bool _attached;
+
+        internal static void Attach()
         {
-            return AccessTools.Method(typeof(GameWorld), nameof(GameWorld.OnDestroy));
+            if (_attached) return;
+            GameWorld.OnDispose += OnWorldDisposed;
+            _attached = true;
         }
 
-        [PatchPrefix]
-        public static void PatchPrefix()
+        private static void OnWorldDisposed()
         {
             try
             {
@@ -85,8 +90,18 @@ namespace DynamicMaps.Patches
 
         protected override MethodBase GetTargetMethod()
         {
-            return AccessTools.Method(typeof(LootItem), nameof(LootItem.Init));
-            //return typeof(GameWorld).GetMethod("RegisterLoot").MakeGenericMethod(typeof(LootItem));
+            return AccessTools.Method(typeof(LootItem),
+                                      nameof(LootItem.Init),
+                                      new[]
+                                      {
+                                          typeof(Item),
+                                          typeof(string),
+                                          typeof(GameWorld),
+                                          typeof(bool),
+                                          typeof(Il2CppInterop.Runtime.InteropTypes.Arrays.Il2CppReferenceArray<MongoID>),
+                                          typeof(string),
+                                          typeof(bool)
+                                      });
         }
 
         [PatchPostfix]

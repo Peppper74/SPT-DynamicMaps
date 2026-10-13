@@ -12,7 +12,7 @@
   "Layers": {
     "Garage": {
       "Level": -1,
-      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Underground_Level.svg",
+      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Underground_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -99, "y": -124},
@@ -31,7 +31,7 @@
     },
     "Ground Floor": {
       "Level": 0,
-      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Ground_Level.svg",
+      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Ground_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -99, "y": -124},
@@ -46,7 +46,7 @@
     },
     "2nd Floor": {
       "Level": 1,
-      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Second_Floor.svg",
+      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Second_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -99, "y": -124},
@@ -65,7 +65,7 @@
     },
     "3rd Floor": {
       "Level": 2,
-      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Third_Floor.svg",
+      "ImagePath": "Maps/GroundZero_TarkovDev/Layers/GroundZero-Third_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -99, "y": -124},

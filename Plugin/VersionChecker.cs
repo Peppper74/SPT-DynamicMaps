@@ -1,7 +1,7 @@
 ﻿using BepInEx;
-using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using System;
 using System.Diagnostics;
 using UnityEngine;
@@ -18,10 +18,9 @@ namespace DrakiaXYZ.VersionChecker
         /// Optionally add a fake setting to the F12 menu if Config is passed in
         /// </summary>
         /// <param value="Logger">The ManualLogSource to output an error to</param>
-        /// <param value="Info">The PluginInfo object for the plugin, used to get the plugin value and version</param>
         /// <param value="Config">A BepinEx ConfigFile object, if provided, a custom message will be added to the F12 menu</param>
         /// <returns></returns>
-        public static bool CheckEftVersion(ManualLogSource Logger, PluginInfo Info, ConfigFile Config = null)
+        public static bool CheckEftVersion(ManualLogSource Logger, ConfigFile Config = null)
         {
             int currentVersion = FileVersionInfo.GetVersionInfo(BepInEx.Paths.ExecutablePath).FilePrivatePart;
             int buildVersion = DynamicMaps.Plugin.TarkovVersion;
@@ -29,7 +28,7 @@ namespace DrakiaXYZ.VersionChecker
             {
                 string errorMessage = $"ERROR: This version of DynamicMaps was built for Tarkov {buildVersion}, but you are running {currentVersion}. Please download the correct plugin version.";
                 Logger.LogError(errorMessage);
-                Chainloader.DependencyErrors.Add(errorMessage);
+                IL2CPPChainloader.Instance.DependencyErrors.Add(errorMessage);
 
                 if (Config != null)
                 {

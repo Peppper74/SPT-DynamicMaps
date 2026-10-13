@@ -12,7 +12,7 @@
   "Layers": {
     "Underground": {
       "Level": -1,
-      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Underground_Level.svg",
+      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Underground_Level.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -1060, "y": -415},
@@ -31,7 +31,7 @@
     },
     "Ground Floor": {
       "Level": 0,
-      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Ground_Level.svg",
+      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Ground_Level.png",
       "TesselationIndex": 2,
       "ImageBounds": {
         "Min": {"x": -1060, "y": -415},
@@ -46,7 +46,7 @@
     },
     "2nd Floor": {
       "Level": 1,
-      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Second_Floor.svg",
+      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Second_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -1060, "y": -415},
@@ -61,7 +61,7 @@
     },
     "3rd Floor": {
       "Level": 2,
-      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Third_Floor.svg",
+      "ImagePath": "Maps/Shoreline_TarkovData/Layers/Shoreline-Third_Floor.png",
       "TesselationIndex": 0,
       "ImageBounds": {
         "Min": {"x": -1060, "y": -415},

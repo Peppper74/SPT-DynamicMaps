@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using EFT.Airdrop;
 using EFT.SynchronizableObjects;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using HarmonyLib;
 
 namespace DynamicMaps.Patches

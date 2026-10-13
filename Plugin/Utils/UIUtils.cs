@@ -1,5 +1,6 @@
-using BepInEx.Configuration;
+using DynamicMaps.Config;
 using DG.Tweening;
+using Il2CppInterop.Runtime;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -35,12 +36,12 @@ namespace DynamicMaps.Utils
 
         public static Tween TweenColor(this Image image, Color to, float duration)
         {
-            return DOTween.To(() => image.color, c => image.color = c, to, duration);
+            return image.DOColor(to, duration);
         }
 
         public static GameObject CreateUIGameObject(GameObject parent, string name)
         {
-            var go = new GameObject(name, typeof(RectTransform));
+            var go = new GameObject(name, Il2CppType.Of<RectTransform>());
             go.layer = parent.layer;
             go.transform.SetParent(parent.transform);
             go.ResetRectTransform();

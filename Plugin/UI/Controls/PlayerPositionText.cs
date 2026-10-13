@@ -6,6 +6,8 @@ namespace DynamicMaps.UI.Controls
 {
     public class PlayerPositionText : AbstractTextControl
     {
+        public PlayerPositionText(System.IntPtr ptr) : base(ptr) { }
+
         public static PlayerPositionText Create(GameObject parent, float fontSize)
         {
             var text = Create<PlayerPositionText>(parent, "PlayerPositionText", fontSize);

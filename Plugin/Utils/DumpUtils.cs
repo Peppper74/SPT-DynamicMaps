@@ -1,18 +1,19 @@
 using System.Collections.Generic;
 using System.IO;
+using System.Text.Json;
 using Comfort.Common;
 using DynamicMaps.Data;
 using DynamicMaps.Patches;
 using EFT;
 using EFT.Interactive;
 using EFT.Interactive.SecretExfiltrations;
-using Newtonsoft.Json;
 using UnityEngine;
 
 namespace DynamicMaps.Utils
 {
     public static class DumpUtils
     {
+        private static readonly JsonSerializerOptions DumpJsonOptions = new() { WriteIndented = true, IncludeFields = true };
         private const string ExtractCategory = "Extract";
         private const string ExtractImagePath = "Markers/exit.png";
 
@@ -111,7 +112,7 @@ namespace DynamicMaps.Utils
             }
 
             var mapName = GameUtils.GetCurrentMapInternalName();
-            var dumpString = JsonConvert.SerializeObject(dump, Formatting.Indented);
+            var dumpString = JsonSerializer.Serialize(dump, DumpJsonOptions);
             File.WriteAllText(Path.Combine(Plugin.Path, $"{mapName}-extracts.json"), dumpString);
 
             Plugin.Log.LogInfo("Dumped extracts");
@@ -141,7 +142,7 @@ namespace DynamicMaps.Utils
             }
 
             var mapName = GameUtils.GetCurrentMapInternalName();
-            var dumpString = JsonConvert.SerializeObject(dump, Formatting.Indented);
+            var dumpString = JsonSerializer.Serialize(dump, DumpJsonOptions);
             File.WriteAllText(Path.Combine(Plugin.Path, $"{mapName}-switches.json"), dumpString);
 
             Plugin.Log.LogInfo("Dumped switches");
@@ -174,7 +175,7 @@ namespace DynamicMaps.Utils
             }
 
             var mapName = GameUtils.GetCurrentMapInternalName();
-            var dumpString = JsonConvert.SerializeObject(dump, Formatting.Indented);
+            var dumpString = JsonSerializer.Serialize(dump, DumpJsonOptions);
             File.WriteAllText(Path.Combine(Plugin.Path, $"{mapName}-locked.json"), dumpString);
 
             Plugin.Log.LogInfo("Dumped locks");

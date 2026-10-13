@@ -1,7 +1,7 @@
-﻿using DynamicMaps.Config;
+using DynamicMaps.Config;
 using EFT.InventoryLogic;
 using HarmonyLib;
-using SPT.Reflection.Patching;
+using SPTushonka.Reflection.Patching;
 using System.Collections.Generic;
 using System.Reflection;
 using EFT.UI;

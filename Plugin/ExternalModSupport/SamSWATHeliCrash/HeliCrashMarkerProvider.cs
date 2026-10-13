@@ -59,7 +59,8 @@ namespace DynamicMaps.ExternalModSupport.SamSWATHeliCrash
         {
             var gameWorld = Singleton<GameWorld>.Instance;
             var HeliCrashWorldItem = gameWorld.FindItemWithWorldData("6223349b3136504a544d1608");
-            var (itemData, WorldData) = HeliCrashWorldItem.Value;
+            var itemData = HeliCrashWorldItem.Value.Item1;
+            var WorldData = HeliCrashWorldItem.Value.Item2;
 
             if (itemData == null){
                 return;

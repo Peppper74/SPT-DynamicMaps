@@ -6,6 +6,8 @@ namespace DynamicMaps.UI.Components
 {
     public class PlayerMapMarker : MapMarker
     {
+        public PlayerMapMarker(System.IntPtr ptr) : base(ptr) { }
+
         private static float _maxCallbackTime = 0.5f;  // how often to call callback in seconds
         private static Vector2 _pivot = new Vector2(0.5f, 0.5f);
 

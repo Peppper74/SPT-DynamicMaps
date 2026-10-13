@@ -11,6 +11,9 @@ namespace DynamicMaps.UI.Components
 {
     public class MapMarker : MonoBehaviour, ILayerBound, IPointerEnterHandler, IPointerExitHandler
     {
+        public MapMarker() { }
+        public MapMarker(System.IntPtr ptr) : base(ptr) { }
+
         // TODO: this seems... not great?
         public static Dictionary<string, Dictionary<LayerStatus, float>> CategoryImageAlphaLayerStatus { get; protected set; }
             = new Dictionary<string, Dictionary<LayerStatus, float>>
@@ -156,8 +159,8 @@ namespace DynamicMaps.UI.Components
 
         public Dictionary<LayerStatus, float> ImageAlphaLayerStatus { get; protected set; } = new Dictionary<LayerStatus, float>
             {
-                {LayerStatus.Hidden, 0.0f},
-                {LayerStatus.Underneath, 0.0f},
+                {LayerStatus.Hidden, 0.25f},
+                {LayerStatus.Underneath, 0.25f},
                 {LayerStatus.OnTop, 1f},
                 {LayerStatus.FullReveal, 1f},
             };

@@ -1,4 +1,4 @@
-using BepInEx.Bootstrap;
+using BepInEx.Unity.IL2CPP;
 using DynamicMaps.ExternalModSupport.SamSWATHeliCrash;
 
 namespace DynamicMaps.ExternalModSupport
@@ -12,19 +12,19 @@ namespace DynamicMaps.ExternalModSupport
         public static void CheckforMods()
         {
             // Check for the presence of SamSwats HeliCrashSides mod
-            if (Chainloader.PluginInfos.ContainsKey("com.SamSWAT.HeliCrash.ArysReloaded"))
+            if (IL2CPPChainloader.Instance.Plugins.ContainsKey("com.SamSWAT.HeliCrash.ArysReloaded"))
             {
                 HeliCrashLoaded = true;
             }
             
             // Check for the presence of Fika mod
-            if (Chainloader.PluginInfos.ContainsKey("com.fika.core"))
+            if (IL2CPPChainloader.Instance.Plugins.ContainsKey("com.fika.core"))
             {
                 FikaLoaded = true;
             }
             
             // Check for the presence of Fika Headless mod
-            if (Chainloader.PluginInfos.ContainsKey("com.fika.headless"))
+            if (IL2CPPChainloader.Instance.Plugins.ContainsKey("com.fika.headless"))
             {
                 FikaHeadlessLoaded = true;
             }

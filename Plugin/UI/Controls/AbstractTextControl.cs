@@ -6,6 +6,8 @@ namespace DynamicMaps.UI.Controls
 {
     public abstract class AbstractTextControl : MonoBehaviour
     {
+        public AbstractTextControl(System.IntPtr ptr) : base(ptr) { }
+
         public TextMeshProUGUI Text { get; protected set; }
         public RectTransform RectTransform => gameObject.transform as RectTransform;
 

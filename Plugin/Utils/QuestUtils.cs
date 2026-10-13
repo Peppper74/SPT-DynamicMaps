@@ -45,6 +45,12 @@ namespace DynamicMaps.Utils
         internal static void TryCaptureQuestData()
         {
             var gameWorld = Singleton<GameWorld>.Instance;
+            if (gameWorld == null)
+            {
+                TriggersWithIds ??= new List<TriggerWithId>();
+                QuestItems ??= new List<LootItem>();
+                return;
+            }
 
             if (TriggersWithIds == null)
             {
@@ -53,11 +59,28 @@ namespace DynamicMaps.Utils
 
             if (QuestItems == null)
             {
-                QuestItems = Traverse.Create(gameWorld)
-                    .Field("LootItems")
-                    .Field("_iteration")
-                    .GetValue<List<LootItem>>()
-                    .Where(i => i.Item.QuestItem).ToList();
+                try
+                {
+                    var lootItems = Traverse.Create(gameWorld)
+                        .Field("LootItems")
+                        .Field("_iteration")
+                        .GetValue<List<LootItem>>();
+
+                    if (lootItems == null)
+                    {
+                        Plugin.Log.LogWarning("Quest loot list is unavailable in this SPT build; continuing without quest-item markers.");
+                        QuestItems = new List<LootItem>();
+                    }
+                    else
+                    {
+                        QuestItems = lootItems.Where(i => i?.Item?.QuestItem == true).ToList();
+                    }
+                }
+                catch (System.Exception e)
+                {
+                    Plugin.Log.LogWarning($"Quest loot list could not be read; continuing without quest-item markers: {e.Message}");
+                    QuestItems = new List<LootItem>();
+                }
             }
         }
 
@@ -95,7 +118,7 @@ namespace DynamicMaps.Utils
             return markers;
         }
 
-        internal static IEnumerable<MapMarkerDef> GetMarkerDefsForQuest(Player player, QuestDataClass quest)
+        internal static IEnumerable<MapMarkerDef> GetMarkerDefsForQuest(Player player, Quest quest)
         {
             var markers = new List<MapMarkerDef>();
 
@@ -141,9 +164,12 @@ namespace DynamicMaps.Utils
             {
                 case ConditionZone zoneCondition:
                 {
-                    foreach (var position in GetPositionsForZoneId(zoneCondition.zoneId, questName, conditionDescription))
+                    foreach (var zoneId in zoneCondition.zoneIds)
                     {
-                        yield return position;
+                        foreach (var position in GetPositionsForZoneId(zoneId, questName, conditionDescription))
+                        {
+                            yield return position;
+                        }
                     }
                     break;
                 }
@@ -246,7 +272,7 @@ namespace DynamicMaps.Utils
             }
         }
 
-        private static IEnumerable<Condition> GetIncompleteQuestConditions(Player player, QuestDataClass quest)
+        private static IEnumerable<Condition> GetIncompleteQuestConditions(Player player, Quest quest)
         {
             // TODO: Template.Conditions is a GClass reference
             if (quest?.Template?.Conditions == null)
@@ -280,7 +306,7 @@ namespace DynamicMaps.Utils
             }
         }
 
-        private static IEnumerable<QuestDataClass> GetIncompleteQuests(Player player)
+        private static IEnumerable<Quest> GetIncompleteQuests(Player player)
         {
             var questController = player.QuestController;
             if (questController == null)
@@ -296,21 +322,14 @@ namespace DynamicMaps.Utils
                 yield break;
             }
 
-            var questsList = quests.list_1;
-            if (questsList == null)
-            {
-                Plugin.Log.LogError($"Not able to get quests for player: {player.Id}, questsList is null");
-                yield break;
-            }
-
-            foreach (var quest in questsList)
+            foreach (var quest in quests)
             {
                 if (quest?.Template?.Conditions == null)
                 {
                     continue;
                 }
 
-                if (quest.Status != EQuestStatus.Started)
+                if (quest._statusData?.Status != EQuestStatus.Started)
                 {
                     continue;
                 }
@@ -319,11 +338,11 @@ namespace DynamicMaps.Utils
             }
         }
 
-        private static bool IsConditionCompleted(Player player, QuestDataClass questData, Condition condition)
+        private static bool IsConditionCompleted(Player player, Quest questData, Condition condition)
         {
             // CompletedConditions is inaccurate (it doesn't reset when some quests do on death)
             // and also does not contain optional objectives, need to recheck if something is in there
-            if (condition.IsNecessary && !questData.CompletedConditions.Contains(condition.id))
+            if (condition.IsNecessary && !questData.CompletedConditions.Contains(condition))
             {
                 return false;
             }

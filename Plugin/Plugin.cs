@@ -1,5 +1,5 @@
 ﻿using BepInEx;
-using BepInEx.Logging;
+using BepInEx.Unity.IL2CPP;
 using Comfort.Common;
 using DrakiaXYZ.VersionChecker;
 using DynamicMaps.Config;
@@ -9,33 +9,54 @@ using DynamicMaps.Utils;
 using EFT;
 using EFT.UI;
 using EFT.UI.Map;
-using SPT.Custom.Utils;
+using BepInEx.Logging;
 using System;
-using System.Diagnostics;
 using System.Reflection;
+using DynamicMaps.UI.Components;
+using DynamicMaps.UI.Controls;
+using Il2CppInterop.Runtime.Injection;
 
 namespace DynamicMaps
 {
     // the version number here is generated on build and may have a warning if not yet built
     [BepInPlugin("com.mpstark.dynamicmaps", "DynamicMaps", BuildInfo.Version)]
-    [BepInDependency("com.SPT.custom", "4.1.0")]
+    [BepInDependency("com.sptushonka.custom", "5.0.0")]
     [BepInDependency("com.SamSWAT.HeliCrash.ArysReloaded", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.fika.core", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("com.fika.headless", BepInDependency.DependencyFlags.SoftDependency)]
-    public class Plugin : BaseUnityPlugin
+    public class Plugin : BasePlugin
     {
-        public const int TarkovVersion = 40743;
+        public const int TarkovVersion = 47965;
         public static Plugin Instance;
-        public static ManualLogSource Log => Instance.Logger;
+        public new static ManualLogSource Log => ((BasePlugin)Instance).Log;
         public static string Path = System.IO.Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
 
         public ModdedMapScreen Map;
 
-        internal void Awake()
+        public override void Load()
         {
-            if (!VersionChecker.CheckEftVersion(Logger, Info, Config))
+            Instance = this;
+
+            ClassInjector.RegisterTypeInIl2Cpp<ModdedMapScreen>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapView>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapLayer>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapLabel>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapMarker>(new RegisterTypeOptions
             {
-                throw new Exception("Invalid EFT Version");
+                Interfaces = new[] { typeof(UnityEngine.EventSystems.IPointerEnterHandler), typeof(UnityEngine.EventSystems.IPointerExitHandler) }
+            });
+            ClassInjector.RegisterTypeInIl2Cpp<TransformMapMarker>();
+            ClassInjector.RegisterTypeInIl2Cpp<PlayerMapMarker>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapScrollRect>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapPeekComponent>();
+            ClassInjector.RegisterTypeInIl2Cpp<MapSelectDropdown>();
+            ClassInjector.RegisterTypeInIl2Cpp<LevelSelectSlider>();
+            ClassInjector.RegisterTypeInIl2Cpp<PlayerPositionText>();
+            ClassInjector.RegisterTypeInIl2Cpp<CursorPositionText>();
+
+            if (!VersionChecker.CheckEftVersion(Log, Config))
+            {
+                return;
             }
 
             ExternalModSupport.ModDetection.CheckforMods();
@@ -45,15 +66,12 @@ namespace DynamicMaps
 
             // Logger.LogWarning("TEST BUILD OF DYNAMIC MAPS, NO SUPPORT OFFERED.");
             
-            Instance = this;
-
             // patches
             new BattleUIScreenShowPatch().Enable();
             new CommonUIAwakePatch().Enable();
             new MapScreenShowPatch().Enable();
             new MapScreenClosePatch().Enable();
             new GameStartedPatch().Enable();
-            new GameWorldOnDestroyPatch().Enable();
             new GameWorldUnregisterPlayerPatch().Enable();
             new LootItemInitPatch().Enable();
             new GameWorldDestroyLootPatch().Enable();
@@ -69,7 +87,7 @@ namespace DynamicMaps
         /// </summary>
         internal void TryAttachToMapScreen(MapScreen mapScreen)
         {
-            if (Map is not null) return;
+            if (Map is not null || mapScreen == null) return;
             
             Log.LogInfo("Trying to attach to MapScreen");
 
@@ -91,14 +109,5 @@ namespace DynamicMaps
             Map.TryAddPeekComponent(battleUI);
         }
 
-        // Check if the necessary type is available, and tell the user if they installed the mod wrong
-        static Plugin()
-        {
-            if (Type.GetType("Unity.VectorGraphics.SVGParser, Unity.VectorGraphics") == null)
-            {
-                MessageBoxHelper.Show("You have incorrectly installed Dynamic Maps.\nPlease reinstall correctly.\nQuitting.", "DynamicMaps Error", MessageBoxHelper.MessageBoxType.OK);
-                Process.GetCurrentProcess().Kill();
-            }
-        }
     }
 }

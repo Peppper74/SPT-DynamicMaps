@@ -8,6 +8,8 @@ namespace DynamicMaps.UI.Components
 {
     public class MapLabel : MonoBehaviour, ILayerBound
     {
+        public MapLabel(System.IntPtr ptr) : base(ptr) { }
+
         public string Text { get; protected set; }
         public string Category { get; protected set; }
 

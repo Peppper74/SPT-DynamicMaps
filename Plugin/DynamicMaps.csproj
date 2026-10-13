@@ -1,107 +1,123 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.1</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AssemblyName>DynamicMaps</AssemblyName>
     <Description>Dynamic in-game maps for SPT</Description>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>preview</LangVersion>
     <Nullable>disable</Nullable>
     <Deterministic>true</Deterministic>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Version.cs" />
+  </ItemGroup>
+
   <PropertyGroup>
-    <TarkovDir Condition=" '$(TarkovDir)' == '' ">D:\SPT 4.1 BE\</TarkovDir>
-    <TarkovPluginsSPTDir>$(TarkovDir)BepInEx\plugins\spt\</TarkovPluginsSPTDir>
-    <TarkovManagedDir>$(TarkovDir)EscapeFromTarkov_Data\Managed\</TarkovManagedDir>
+    <TarkovDir Condition=" '$(TarkovDir)' == '' ">E:\EscapeFromTarkov\</TarkovDir>
+    <TarkovPluginsSPTDir>$(TarkovDir)BepInEx\plugins\sptushonka\</TarkovPluginsSPTDir>
+    <TarkovInteropDir>$(TarkovDir)BepInEx\interop\</TarkovInteropDir>
     <TarkovBepInExCoreDir>$(TarkovDir)BepInEx\core\</TarkovBepInExCoreDir>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="Assembly-CSharp">
-      <HintPath>$(TarkovManagedDir)Assembly-CSharp.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Assembly-CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Comfort">
-      <HintPath>$(TarkovManagedDir)Comfort.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Comfort.dll</HintPath>
     </Reference>
     <Reference Include="Comfort.Unity">
-      <HintPath>$(TarkovManagedDir)Comfort.Unity.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Comfort.Unity.dll</HintPath>
+    </Reference>
+    <Reference Include="CoreServices">
+      <HintPath>$(TarkovInteropDir)CoreServices.dll</HintPath>
+    </Reference>
+    <Reference Include="BitPacking">
+      <HintPath>$(TarkovInteropDir)BitPacking.dll</HintPath>
+    </Reference>
+    <Reference Include="Diz.Binding">
+      <HintPath>$(TarkovInteropDir)Diz.Binding.dll</HintPath>
     </Reference>
     <Reference Include="DissonanceVoip">
-      <HintPath>$(TarkovManagedDir)DissonanceVoip.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)DissonanceVoip.dll</HintPath>
     </Reference>
     <Reference Include="DOTween">
-      <HintPath>$(TarkovManagedDir)DOTween.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)DOTween.dll</HintPath>
     </Reference>
     <Reference Include="DOTween.Modules">
-      <HintPath>$(TarkovManagedDir)DOTween.Modules.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)DOTween.Modules.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>$(TarkovManagedDir)Newtonsoft.Json.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="Sirenix.Serialization">
-      <HintPath>$(TarkovManagedDir)Sirenix.Serialization.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Sirenix.Serialization.dll</HintPath>
     </Reference>
     <Reference Include="Unity.TextMeshPro">
-      <HintPath>$(TarkovManagedDir)Unity.TextMeshPro.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
-      <HintPath>$(TarkovManagedDir)UnityEngine.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.CoreModule.dll</HintPath>
     </Reference>
-    <Reference Include="UnityEngine.PhysicModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.PhysicsModule.dll</HintPath>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(TarkovInteropDir)UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI">
-      <HintPath>$(TarkovManagedDir)UnityEngine.UI.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule">
-      <HintPath>$(TarkovManagedDir)UnityEngine.UIModule.dll</HintPath>
+      <HintPath>$(TarkovInteropDir)UnityEngine.UIModule.dll</HintPath>
     </Reference>
-      <Reference Include="Unity.VectorGraphics">
-          <HintPath>$(TarkovManagedDir)Unity.VectorGraphics.dll</HintPath>
-      </Reference>
-      <Reference Include="Unity.InternalAPIEngineBridge.003">
-          <HintPath>$(TarkovManagedDir)Unity.InternalAPIEngineBridge.003.dll</HintPath>
-      </Reference>
     <Reference Include="0Harmony">
       <HintPath>$(TarkovBepInExCoreDir)0Harmony.dll</HintPath>
     </Reference>
-    <Reference Include="BepinEx">
-      <HintPath>$(TarkovBepInExCoreDir)BepInEx.dll</HintPath>
+    <Reference Include="BepInEx.Core">
+      <HintPath>$(TarkovBepInExCoreDir)BepInEx.Core.dll</HintPath>
     </Reference>
-    <Reference Include="BepinEx.Preloader">
-      <HintPath>$(TarkovBepInExCoreDir)BepInEx.Preloader.dll</HintPath>
+    <Reference Include="BepInEx.Unity.IL2CPP">
+      <HintPath>$(TarkovBepInExCoreDir)BepInEx.Unity.IL2CPP.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="spt-reflection">
-      <HintPath>$(TarkovPluginsSPTDir)spt-reflection.dll</HintPath>
+    <Reference Include="Il2Cppmscorlib">
+      <HintPath>$(TarkovInteropDir)Il2Cppmscorlib.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="spt-custom">
-      <HintPath>$(TarkovPluginsSPTDir)spt-custom.dll</HintPath>
+    <Reference Include="Il2CppInterop.Runtime">
+      <HintPath>$(TarkovBepInExCoreDir)Il2CppInterop.Runtime.dll</HintPath>
+      <Private>false</Private>
     </Reference>
-    <Reference Include="spt-common">
-      <HintPath>$(TarkovPluginsSPTDir)spt-common.dll</HintPath>
+    <Reference Include="SPTushonka.Reflection">
+      <HintPath>$(TarkovPluginsSPTDir)SPTushonka.Reflection.dll</HintPath>
+    </Reference>
+    <Reference Include="SPTushonka.Custom">
+      <HintPath>$(TarkovPluginsSPTDir)SPTushonka.Custom.dll</HintPath>
+    </Reference>
+    <Reference Include="SPTushonka.Common">
+      <HintPath>$(TarkovPluginsSPTDir)SPTushonka.Common.dll</HintPath>
     </Reference>
   </ItemGroup>
 
   <!-- Gets the version property from the VERSION.txt file -->
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+  <Target Name="PreBuild" BeforeTargets="CoreCompile">
     <ItemGroup>
       <VersionFile Include="VERSION.txt" />
       <VersionCs Include="$(ProjectDir)Version.cs" />
-      <Compile Include="@(VersionCs)" Exclude="@(VersionCs)" /> <!-- Resolves double include -->
+      <Compile Include="@(VersionCs)" />
       <FileWrites Include="@(VersionCs)" />
     </ItemGroup>
 
@@ -119,20 +135,20 @@
       <ServerComponents Include="$(ProjectDir)../Server/bin/Release/mpstark-dynamicmaps/*.*" />
       <OutputDLL Include="$(ProjectDir)$(OutDir)$(TargetName).dll" />
       <License Include="$(ProjectDir)LICENSE" />
-      <Resources Include="$(ProjectDir)Resources\**\*.*" />
+      <Resources Include="$(ProjectDir)Resources\**\*.*" Exclude="$(ProjectDir)Resources\**\*.svg" />
       <ManagedDlls Include="$(ProjectDir)../EscapeFromTarkov_Data\**\*.*" />
     </ItemGroup>
 
     <!-- Copies the output and resources to tarkov game folder -->
     <Copy SourceFiles="@(OutputDLL);@(Resources);@(License)" DestinationFolder="$(TarkovDir)BepInEx\plugins\mpstark-dynamicmaps\%(RecursiveDir)" />
     <Copy SourceFiles="@(ManagedDlls)" DestinationFolder="$(TarkovDir)\%(RecursiveDir)" />
-    <Copy SourceFiles="@(ServerComponents)" DestinationFolder="$(TarkovDir)SPT_Runtime\user\mods\mpstark-dynamicmaps\%(RecursiveDir)" />
+    <Copy SourceFiles="@(ServerComponents)" DestinationFolder="$(TarkovDir)SPT_Runtime\user\mods\DynamicMaps\%(RecursiveDir)" />
 
     <!-- Creates a release zip file -->
     <RemoveDir Directories="$(ProjectDir)release" />
     <Copy SourceFiles="@(OutputDLL);@(Resources);@(License)" DestinationFolder="$(ProjectDir)release\DynamicMaps\BepInEx\plugins\mpstark-dynamicmaps\%(RecursiveDir)" />
     <Copy SourceFiles="@(ManagedDlls)" DestinationFolder="$(ProjectDir)release\DynamicMaps\EscapeFromTarkov_Data\%(RecursiveDir)" />
-    <Copy SourceFiles="@(ServerComponents)" DestinationFolder="$(ProjectDir)release\DynamicMaps\SPT_Runtime\user\mods\mpstark-dynamicmaps\%(RecursiveDir)" />
+    <Copy SourceFiles="@(ServerComponents)" DestinationFolder="$(ProjectDir)release\DynamicMaps\SPT_Runtime\user\mods\DynamicMaps\%(RecursiveDir)" />
     <ZipDirectory SourceDirectory="$(ProjectDir)release\DynamicMaps\" DestinationFile="$(ProjectDir)release\DynamicMaps-$(Version).zip" />
   </Target>
 

@@ -7,6 +7,8 @@ namespace DynamicMaps.UI.Components
 {
     internal class MapPeekComponent : MonoBehaviour
     {
+        public MapPeekComponent(System.IntPtr ptr) : base(ptr) { }
+
         public ModdedMapScreen MapScreen { get; set; }
         public RectTransform MapScreenTrueParent { get; set; }
 

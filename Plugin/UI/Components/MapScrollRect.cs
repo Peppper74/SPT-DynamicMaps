@@ -5,6 +5,8 @@ using UnityEngine.EventSystems;
 
 public class MapScrollRect : ScrollRect
 {
+    public MapScrollRect(System.IntPtr ptr) : base(ptr) { }
+
     public System.Action OnBeginDragCallback;
 
     public override void OnBeginDrag(PointerEventData eventData)
