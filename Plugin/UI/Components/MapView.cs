@@ -164,10 +164,21 @@ namespace DynamicMaps.UI.Components
             }
 
             _markers.Remove(marker);
-            marker.OnPositionChanged -= UpdateLayerBound;
-            DOTween.Kill(marker.transform);
-            marker.gameObject.SetActive(false);  // destroy not guaranteed to be called immediately
-            GameObject.Destroy(marker.gameObject);
+
+            try
+            {
+                marker.OnPositionChanged -= UpdateLayerBound;
+                DOTween.Kill(marker.transform);
+                marker.gameObject.SetActive(false);  // destroy not guaranteed to be called immediately
+                GameObject.Destroy(marker.gameObject);
+            }
+            catch (Exception e)
+            {
+                // The marker can already be destroyed (map change, raid transition) while a provider
+                // still holds a reference to it. Removing it from the lists is what matters, and the
+                // exception must not escape into the game code that triggered the removal.
+                Plugin.Log.LogWarning($"RemoveMapMarker: marker was already destroyed ({e.Message})");
+            }
         }
 
         public void AddMapLabel(MapLabelDef labelDef)
@@ -187,9 +198,17 @@ namespace DynamicMaps.UI.Components
             }
 
             _labels.Remove(label);
-            DOTween.Kill(label.transform);
-            label.gameObject.SetActive(false);  // destroy not guaranteed to be called immediately
-            GameObject.Destroy(label.gameObject);
+
+            try
+            {
+                DOTween.Kill(label.transform);
+                label.gameObject.SetActive(false);  // destroy not guaranteed to be called immediately
+                GameObject.Destroy(label.gameObject);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogWarning($"RemoveMapLabel: label was already destroyed ({e.Message})");
+            }
         }
 
         public void LoadMap(MapDef mapDef, RectTransform maskTransform)

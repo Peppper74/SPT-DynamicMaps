@@ -12,8 +12,8 @@ public static class ImageUtils
 
     public static Sprite GetOrLoadCachedSprite(MapLayerDef def)
     {
-        if (MapCache.TryGetValue(def.ImagePath, out var sprite))
-            return sprite;
+        if (MapCache.TryGetValue(def.ImagePath, out var cached) && IsAlive(cached))
+            return cached;
 
         var absolutePath = Path.Combine(Plugin.Path, def.ImagePath);
         var texture = new Texture2D(2, 2, TextureFormat.RGBA32, mipChain: false);
@@ -25,13 +25,29 @@ public static class ImageUtils
             return null;
         }
 
-        sprite = Sprite.Create(
+        // keep runtime created assets alive across location changes
+        texture.hideFlags = HideFlags.DontUnloadUnusedAsset;
+
+        var sprite = Sprite.Create(
             texture,
             new Rect(0, 0, texture.width, texture.height),
             new Vector2(0.5f, 0.5f),
             pixelsPerUnit: 1f);
+        sprite.hideFlags = HideFlags.DontUnloadUnusedAsset;
 
         MapCache[def.ImagePath] = sprite;
         return sprite;
+    }
+
+    private static bool IsAlive(Sprite sprite)
+    {
+        try
+        {
+            return sprite != null && sprite.texture != null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

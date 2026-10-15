@@ -49,6 +49,8 @@ namespace DynamicMaps.Config
         public static ConfigEntry<bool> ShowDroppedBackpackInRaid;
         public static ConfigEntry<bool> ShowWishListItemsInRaid;
         public static ConfigEntry<bool> ShowOnlyOtherWishListItemsInRaid;
+        public static ConfigEntry<bool> ShowCorpseLootInRaid;
+        public static ConfigEntry<bool> ShowContainerLootInRaid;
         public static ConfigEntry<bool> ShowBTRInRaid;
         public static ConfigEntry<bool> ShowAirdropsInRaid;
         public static ConfigEntry<bool> ShowHiddenStashesInRaid;
@@ -399,6 +401,22 @@ namespace DynamicMaps.Config
                 false,
                 new ConfigDescription(
                     "When enabled, only wishlist items in the Other category are shown on the map",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+            ConfigEntries.Add(ShowCorpseLootInRaid = config.Bind(
+                DynamicMarkerTitle,
+                "Show wishlist loot in corpses",
+                true,
+                new ConfigDescription(
+                    "Shows wishlist items that lie in the corpse of a dead player or bot; the marker disappears once the item is taken",
+                    null,
+                    new ConfigurationManagerAttributes { })));
+            ConfigEntries.Add(ShowContainerLootInRaid = config.Bind(
+                DynamicMarkerTitle,
+                "Show wishlist loot in containers",
+                true,
+                new ConfigDescription(
+                    "Shows wishlist items that lie in lootable containers (crates, safes, jackets, stashes); the marker disappears once the item is taken",
                     null,
                     new ConfigurationManagerAttributes { })));
 

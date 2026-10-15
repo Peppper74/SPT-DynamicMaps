@@ -145,6 +145,7 @@ namespace DynamicMaps.UI.Components
             // attach map screen to peek mask
             MapScreen.transform.SetParent(RectTransform);
             MapScreen.Show(playAnimation);
+            MapScreen.DumpRenderState("peek");
         }
 
         internal void EndPeek()
@@ -176,6 +177,7 @@ namespace DynamicMaps.UI.Components
             
             MapScreen.transform.SetParent(RectTransform);
             MapScreen.Show(playAnimation);
+            MapScreen.DumpRenderState("mini-map");
         }
 
         internal void EndMiniMap()

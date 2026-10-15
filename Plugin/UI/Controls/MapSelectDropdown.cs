@@ -112,7 +112,7 @@ namespace DynamicMaps.UI.Controls
                         return true;
                     }
 
-                    return m.MapInternalNames.Contains(_nameFilter);
+                    return m.MapInternalNames.Any(n => string.Equals(n, _nameFilter, StringComparison.OrdinalIgnoreCase));
                 }).OrderBy(m => m.DisplayName);
         }
 

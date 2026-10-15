@@ -35,6 +35,9 @@ namespace DynamicMaps.Patches
         {
             try
             {
+                // the watcher has to exist from the menu onwards, not only once the inventory is opened
+                Plugin.Instance?.EnsureWatcher();
+
                 if (serverConfigLoaded == false)
                 {
                     serverConfigLoaded = true;

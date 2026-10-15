@@ -20,6 +20,10 @@ namespace DynamicMaps.Patches
         {
             try
             {
+                Plugin.Instance?.EnsureWatcher();
+
+                Plugin.Log.LogInfo($"MapScreen.Show patch fired; modAttached={Plugin.Instance.Map != null}");
+
                 // Let EFT perform its SPT 5 screen activation first, then replace its map contents.
                 if (Plugin.Instance.Map == null && __instance != null)
                 {
@@ -55,6 +59,8 @@ namespace DynamicMaps.Patches
         {
             try
             {
+                Plugin.Log.LogInfo($"MapScreen.Close patch fired; modAttached={Plugin.Instance.Map != null}");
+
                 if (Settings.ReplaceMapScreen.Value && GameUtils.ShouldShowMapInRaid())
                 {
                     Plugin.Instance.Map?.OnMapScreenClose();

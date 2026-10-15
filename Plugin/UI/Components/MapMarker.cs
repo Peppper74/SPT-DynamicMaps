@@ -15,6 +15,8 @@ namespace DynamicMaps.UI.Components
         public MapMarker(System.IntPtr ptr) : base(ptr) { }
 
         // TODO: this seems... not great?
+        private static readonly HashSet<string> _missingSpriteLogged = new();
+
         public static Dictionary<string, Dictionary<LayerStatus, float>> CategoryImageAlphaLayerStatus { get; protected set; }
             = new Dictionary<string, Dictionary<LayerStatus, float>>
             {
@@ -218,9 +220,22 @@ namespace DynamicMaps.UI.Components
             imageGO.GetRectTransform().pivot = new Vector2(0.5f, 0.5f);
             marker.Image = imageGO.AddComponent<Image>();
             marker.Image.raycastTarget = false;
-            marker.Image.sprite = sprite is null 
-                ? TextureUtils.GetOrLoadCachedSprite(imageRelativePath)
-                : sprite;
+            if (sprite is null && !string.IsNullOrEmpty(imageRelativePath))
+            {
+                sprite = TextureUtils.GetOrLoadCachedSprite(imageRelativePath);
+            }
+
+            if (sprite is null)
+            {
+                // without an icon the marker is drawn as a plain coloured quad
+                var missingKey = $"{category}|{imageRelativePath}";
+                if (_missingSpriteLogged.Add(missingKey))
+                {
+                    Plugin.Log.LogWarning($"MapMarker: no sprite for category '{category}' (image '{imageRelativePath}'), drawing a plain quad");
+                }
+            }
+
+            marker.Image.sprite = sprite;
             marker.Image.type = Image.Type.Simple;
 
             // var outline = imageGO.AddComponent<Outline>();

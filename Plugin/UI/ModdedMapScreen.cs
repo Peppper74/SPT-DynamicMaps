@@ -74,6 +74,8 @@ namespace DynamicMaps.UI
 
         // peek
         private MapPeekComponent _peekComponent;
+        internal bool HasPeekComponent => _peekComponent is not null;
+        internal bool IsPeeked => IsPeeking || ShowingMiniMap;
         private bool IsPeeking => _peekComponent != null && _peekComponent.IsPeeking;
         private bool ShowingMiniMap => _peekComponent != null && _peekComponent.ShowingMiniMap;
         private Vector2 _savedMainMapPos = Vector2.zero;
@@ -224,6 +226,8 @@ namespace DynamicMaps.UI
 
         private void Update()
         {
+            RenderDiagnostics.ProcessPendingCapture();
+
             // because we have a scroll rect, it seems to eat OnScroll via IScrollHandler
             var scroll = Input.GetAxis("Mouse ScrollWheel");
             if (scroll != 0f)
@@ -340,11 +344,63 @@ namespace DynamicMaps.UI
             var visibilityGroup = gameObject.GetComponent<CanvasGroup>() ?? gameObject.AddComponent<CanvasGroup>();
             visibilityGroup.alpha = 1f;
             visibilityGroup.ignoreParentGroups = true;
-            Plugin.Log.LogInfo($"Map screen visible={gameObject.activeInHierarchy}, parent={transform.parent.gameObject.activeInHierarchy}, map={_mapView.CurrentMapDef?.DisplayName}, layers={_mapView.MapLayerContainer.transform.childCount}, rect={RectTransform.rect.size}, mask={_scrollMask.GetRectTransform().rect.size}");
+            DumpRenderState("map screen");
 
-            var layerImage = _mapView.MapLayerContainer.GetComponentInChildren<Image>(true);
-            var sprite = layerImage?.sprite;
-            Plugin.Log.LogInfo($"Map render diagnostic: viewActive={_mapView.gameObject.activeInHierarchy}, canvasEnabled={mapCanvas.enabled}, overrideSorting={mapCanvas.overrideSorting}, sortingOrder={mapCanvas.sortingOrder}, renderMode={mapCanvas.renderMode}, rootCanvas={mapCanvas.rootCanvas?.name}, imageEnabled={layerImage?.enabled}, sprite={sprite?.name}, texture={sprite?.texture?.width}x{sprite?.texture?.height}, imageRect={layerImage?.GetRectTransform().rect.size}");
+            if (GameUtils.IsInRaid())
+            {
+                Plugin.Instance.EnsurePeekAttached();
+            }
+        }
+
+        // Temporary port diagnostics: log the whole UI state and take a screenshot, so we can
+        // see whether the modded map is rendered and, if not, which part of it is off.
+        internal void DumpRenderState(string reason)
+        {
+            try
+            {
+                Plugin.Log.LogInfo($"--- DynamicMaps render dump ({reason}) ---");
+                Plugin.Log.LogInfo($"screen: {Screen.width}x{Screen.height}");
+                Plugin.Log.LogInfo($"root '{gameObject.name}': {RenderDiagnostics.State(gameObject)}, {RenderDiagnostics.RectState(RectTransform)}, groupAlpha={gameObject.GetComponent<CanvasGroup>()?.alpha.ToString() ?? "none"}, map={_mapView.CurrentMapDef?.DisplayName}");
+                Plugin.Log.LogInfo($"parent '{transform.parent?.name}': active={transform.parent != null && transform.parent.gameObject.activeInHierarchy}");
+                Plugin.Log.LogInfo($"scroll: {RenderDiagnostics.State(_scrollRect.gameObject)}, {RenderDiagnostics.RectState(_scrollRect.GetRectTransform())}");
+                Plugin.Log.LogInfo($"mask: {RenderDiagnostics.State(_scrollMask.gameObject)}, {RenderDiagnostics.RectState(_scrollMask.GetRectTransform())}, {RenderDiagnostics.MaskState(_scrollMask)}, image={RenderDiagnostics.ImageState(_scrollMask.GetComponent<Image>())}");
+                Plugin.Log.LogInfo($"mapView: {RenderDiagnostics.State(_mapView.gameObject)}, {RenderDiagnostics.RectState(_mapView.RectTransform)}");
+
+                var canvas = _mapView.GetComponent<Canvas>();
+                Plugin.Log.LogInfo($"mapView canvas: enabled={canvas?.enabled}, override={canvas?.overrideSorting}, order={canvas?.sortingOrder}, root={canvas?.rootCanvas?.name}, rootOrder={canvas?.rootCanvas?.sortingOrder}, rootOverride={canvas?.rootCanvas?.overrideSorting}");
+
+                var layers = _mapView.MapLayerContainer.GetComponentsInChildren<MapLayer>(true);
+                Plugin.Log.LogInfo($"layers: {layers?.Length}");
+                if (layers != null)
+                {
+                    foreach (var layer in layers)
+                    {
+                        Plugin.Log.LogInfo($"  layer '{layer.name}': level={layer.Level}, status={layer.Status}, {RenderDiagnostics.State(layer.gameObject)}, {RenderDiagnostics.RectState(layer.RectTransform)}, image={RenderDiagnostics.ImageState(layer.GetComponent<Image>())}");
+                    }
+                }
+
+                var markers = _mapView.MapMarkerContainer.GetComponentsInChildren<MapMarker>(true);
+                Plugin.Log.LogInfo($"markers: {markers?.Length}");
+                if (markers != null)
+                {
+                    for (var i = 0; i < markers.Length && i < 12; i++)
+                    {
+                        var marker = markers[i];
+                        var markerImage = marker.Image;
+                        var markerSprite = markerImage != null ? markerImage.sprite : null;
+                        var markerTexture = markerSprite != null ? markerSprite.texture : null;
+                        var spriteName = markerSprite != null ? markerSprite.name : "<null>";
+                        var textureSize = markerTexture != null ? $"{markerTexture.width}x{markerTexture.height}" : "<null>";
+                        Plugin.Log.LogInfo($"  marker '{marker.Category}' text='{marker.Text}': image={(markerImage != null)}, sprite={spriteName}, texture={textureSize}, color={markerImage?.color}, active={marker.gameObject.activeInHierarchy}");
+                    }
+                }
+
+                RenderDiagnostics.RequestCapture(reason.Replace(' ', '-'));
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.LogError($"Render dump failed: {e.Message}");
+            }
         }
 
         internal void OnMapScreenClose()
@@ -413,7 +469,7 @@ namespace DynamicMaps.UI
 
         private void OnRaidEnd()
         {
-            if (!BattleUIScreenShowPatch.IsAttached) return;
+            if (_peekComponent is null && !BattleUIScreenShowPatch.IsAttached) return;
             
             // Reset saved main map position
             _savedMainMapPos = Vector2.zero;
@@ -434,11 +490,14 @@ namespace DynamicMaps.UI
             }
 
             // reset peek and remove reference, it will be destroyed very shortly with parent object
-            _peekComponent?.EndPeek();
-            _peekComponent?.EndMiniMap();
-            
-            Destroy(_peekComponent.gameObject);
-            _peekComponent = null;
+            if (_peekComponent is not null)
+            {
+                _peekComponent.EndPeek();
+                _peekComponent.EndMiniMap();
+
+                Destroy(_peekComponent.gameObject);
+                _peekComponent = null;
+            }
 
             // unload map completely when raid ends, since we've removed markers
             _mapView.UnloadMap();
@@ -465,8 +524,7 @@ namespace DynamicMaps.UI
 
             _scrollRect.GetRectTransform().sizeDelta = RectTransform.sizeDelta;
 
-            _scrollMask.GetRectTransform().anchoredPosition = MaskPositionOutOfRaid;
-            _scrollMask.GetRectTransform().sizeDelta = RectTransform.sizeDelta + MaskSizeModifierOutOfRaid;
+            SetMaskLayout(RectTransform.sizeDelta + MaskSizeModifierOutOfRaid, MaskPositionOutOfRaid, MaskAnchorCenter, MaskAnchorCenter);
 
             _levelSelectSlider.RectTransform.anchoredPosition = LevelSliderPosition;
 
@@ -480,8 +538,7 @@ namespace DynamicMaps.UI
         private void AdjustForOutOfRaid()
         {
             // adjust mask
-            _scrollMask.GetRectTransform().anchoredPosition = MaskPositionOutOfRaid;
-            _scrollMask.GetRectTransform().sizeDelta = RectTransform.sizeDelta + MaskSizeModifierOutOfRaid;
+            SetMaskLayout(RectTransform.sizeDelta + MaskSizeModifierOutOfRaid, MaskPositionOutOfRaid, MaskAnchorCenter, MaskAnchorCenter);
 
             // turn on cursor and off player position texts
             _cursorPositionText.gameObject.SetActive(true);
@@ -491,12 +548,9 @@ namespace DynamicMaps.UI
 
         private void AdjustForInRaid(bool playAnimation)
         {
-            var speed = playAnimation ? 0.35f : 0f;
-            
-            // adjust mask
-            _scrollMask.GetRectTransform().DOSizeDelta(RectTransform.sizeDelta + MaskSizeModifierInRaid, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOAnchorPos(MaskPositionInRaid, _transitionAnimations ? speed : 0f);
-            
+            // adjust mask (layout is applied instantly, see SetMaskLayout)
+            SetMaskLayout(RectTransform.sizeDelta + MaskSizeModifierInRaid, MaskPositionInRaid, MaskAnchorCenter, MaskAnchorCenter);
+
             // turn both cursor and player position texts on
             _cursorPositionText.gameObject.SetActive(true);
             _playerPositionText.gameObject.SetActive(true);
@@ -505,12 +559,9 @@ namespace DynamicMaps.UI
 
         private void AdjustForPeek(bool playAnimation)
         {
-            var speed = playAnimation ? 0.35f : 0f;
-            
-            // adjust mask
-            _scrollMask.GetRectTransform().DOAnchorPos(Vector2.zero, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOSizeDelta(RectTransform.sizeDelta, _transitionAnimations ? speed : 0f);
-            
+            // adjust mask (layout is applied instantly, see SetMaskLayout)
+            SetMaskLayout(RectTransform.sizeDelta, Vector2.zero, MaskAnchorCenter, MaskAnchorCenter);
+
             // turn both cursor and player position texts off
             _cursorPositionText.gameObject.SetActive(false);
             _playerPositionText.gameObject.SetActive(false);
@@ -519,24 +570,37 @@ namespace DynamicMaps.UI
 
         private void AdjustForMiniMap(bool playAnimation)
         {
-            var speed = playAnimation ? 0.35f : 0f;
-            
             var cornerPosition = ConvertEnumToScreenPos(Settings.MiniMapPosition.Value);
-            
+
             var offset = new Vector2(Settings.MiniMapScreenOffsetX.Value, Settings.MiniMapScreenOffsetY.Value);
             offset *= ConvertEnumToScenePivot(Settings.MiniMapPosition.Value);
-            
+
             var size = new Vector2(Settings.MiniMapSizeX.Value, Settings.MiniMapSizeY.Value);
-            
-            _scrollMask.GetRectTransform().DOSizeDelta(size, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOAnchorPos(offset, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOAnchorMin(cornerPosition, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOAnchorMax(cornerPosition, _transitionAnimations ? speed : 0f);
-            _scrollMask.GetRectTransform().DOPivot(cornerPosition, _transitionAnimations ? speed : 0f);
-            
+
+            // adjust mask (layout is applied instantly, see SetMaskLayout)
+            SetMaskLayout(size, offset, cornerPosition, cornerPosition);
+
             _cursorPositionText.gameObject.SetActive(false);
             _playerPositionText.gameObject.SetActive(false);
             _levelSelectSlider.gameObject.SetActive(false);
+        }
+
+        private static readonly Vector2 MaskAnchorCenter = new Vector2(0.5f, 0.5f);
+
+        /// <summary>
+        /// Applies the mask layout immediately instead of tweening it: on this build the tweened
+        /// geometry did not take effect reliably, so the mini-map kept the full screen mask (and
+        /// covered the whole view) while the full screen states kept the mini-map anchors.
+        /// </summary>
+        private void SetMaskLayout(Vector2 size, Vector2 anchoredPosition, Vector2 anchor, Vector2 pivot)
+        {
+            var maskRect = _scrollMask.GetRectTransform();
+
+            maskRect.anchorMin = anchor;
+            maskRect.anchorMax = anchor;
+            maskRect.pivot = pivot;
+            maskRect.sizeDelta = size;
+            maskRect.anchoredPosition = anchoredPosition;
         }
 
         private Vector2 ConvertEnumToScreenPos(EMiniMapPosition pos)
@@ -1039,6 +1103,8 @@ namespace DynamicMaps.UI
                                  || Settings.ShowOtherCorpsesInRaid.Value;
 
             AddRemoveMarkerProvider<CorpseMarkerProvider>(needCorpseMarkers);
+            AddRemoveMarkerProvider<ContainerLootMarkerProvider>(Settings.ShowCorpseLootInRaid.Value
+                                                            || Settings.ShowContainerLootInRaid.Value);
             if (needCorpseMarkers)
             {
                 var provider = GetMarkerProvider<CorpseMarkerProvider>();
@@ -1107,6 +1173,18 @@ namespace DynamicMaps.UI
             return (T)_dynamicMarkerProviders[typeof(T)];
         }
 
+        /// <summary>
+        /// 1 Hz refresh for markers that track live game state (corpse loot).
+        /// </summary>
+        internal void TickDynamicMarkers()
+        {
+            if (_dynamicMarkerProviders.TryGetValue(typeof(ContainerLootMarkerProvider), out var provider)
+                && provider is ContainerLootMarkerProvider containerLootProvider)
+            {
+                containerLootProvider.Tick();
+            }
+        }
+
         #endregion
 
         #region Utils And Caching
@@ -1140,6 +1218,21 @@ namespace DynamicMaps.UI
             _savedMainMapPos = Vector2.zero;
             
             _mapView.LoadMap(mapDef, _scrollMask.GetRectTransform());
+
+            // Loading a map resets the mask to the full screen layout (AdjustSizeAndPosition above),
+            // which made the first mini-map of a raid cover the whole screen until the next peek
+            // cycle. Put the layout of the active mode back after the load.
+            if (GameUtils.IsInRaid())
+            {
+                if (ShowingMiniMap)
+                {
+                    AdjustForMiniMap(false);
+                }
+                else if (IsPeeking)
+                {
+                    AdjustForPeek(false);
+                }
+            }
 
             _mapSelectDropdown.OnLoadMap(mapDef);
             _levelSelectSlider.OnLoadMap(mapDef, _mapView.SelectedLevel);

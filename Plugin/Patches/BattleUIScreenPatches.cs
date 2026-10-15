@@ -15,7 +15,7 @@ namespace DynamicMaps.Patches
     internal class BattleUIScreenShowPatch : ModulePatch
     {
         public static bool IsAttached = false;
-        private static bool _loggedFirstShow;
+        private static int _showCount;
         
         protected override MethodBase GetTargetMethod()
         {
@@ -31,11 +31,8 @@ namespace DynamicMaps.Patches
             // IL2CPP returns generic UI instances as their declared proxy/base type;
             // a C# `is` check can miss the actual EFT screen even when it is that type.
             var battleUIScreen = __instance?.TryCast<EftBattleUIScreen>();
-            if (!_loggedFirstShow)
-            {
-                _loggedFirstShow = true;
-                Plugin.Log.LogInfo($"BattleUIScreen.Show patch fired; instance={__instance?.GetType().FullName ?? "<null>"}, castSucceeded={battleUIScreen != null}, mapAttached={Plugin.Instance.Map != null}");
-            }
+            _showCount++;
+            Plugin.Log.LogInfo($"BattleUIScreen.Show patch fired #{_showCount}; instance={__instance?.GetType().FullName ?? "<null>"}, castSucceeded={battleUIScreen != null}, mapAttached={Plugin.Instance.Map != null}");
             if (battleUIScreen == null) return;
 
             IsAttached = GameUtils.ShouldShowMapInRaid();

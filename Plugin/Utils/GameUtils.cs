@@ -81,10 +81,46 @@ namespace DynamicMaps.Utils
                                       && botGame.Status != GameStatus.SoftStopping);
         }
 
+        // SPT 4.x hands the client GUID location ids for some raids instead of the classic
+        // names ("bigmap", "RezervBase", ...) that the map definitions under Resources/Maps
+        // use. Both shapes are mapped onto the classic name here.
+        private static readonly Dictionary<string, string> LocationAliases = new(StringComparer.OrdinalIgnoreCase)
+        {
+            { "01a445b0-4545-48da-9ce6-6d0190869360", "bigmap" },          // Customs
+            { "0246436c-7d69-4036-999d-ebcb956970b5", "factory4_day" },    // Factory (day + night)
+            { "004241d4-d939-4a7b-8cad-36924aab6c48", "Woods" },
+            { "019d9bd8-411d-49a6-84ca-727ffb38e57b", "Interchange" },
+            { "0046beaa-6af4-40d6-b031-b73a4d9229f7", "RezervBase" },
+            { "012debaa-649e-4aae-bcd1-c479bf8efbe0", "Shoreline" },
+            { "0043f275-0dc2-4c04-87a1-bd90cbaf183a", "laboratory" },
+            { "035e94f9-c4b3-4e8a-a1a9-7e1b06b2fb75", "Lighthouse" },
+            { "00eb887b-1633-4fd1-ada3-ca02915ec343", "TarkovStreets" },
+            { "0043051d-f15a-4e50-8c96-ba69c3bc43f7", "Sandbox" },         // Ground Zero
+            { "0344832c-a6f2-4c58-8d89-85e9d451a7ed", "Sandbox_high" },
+            { "07c074ca-3ea0-4958-b1a1-aec5e42c0000", "Labyrinth" },
+        };
+
+        private static int _locationLogCount;
+
         public static string GetCurrentMapInternalName()
         {
             var gameWorld = Singleton<GameWorld>.Instance;
-            return gameWorld?.MainPlayer?.Location;
+            var rawLocation = gameWorld?.MainPlayer?.Location;
+
+            var mapInternalName = rawLocation;
+            if (!string.IsNullOrEmpty(rawLocation) && LocationAliases.TryGetValue(rawLocation, out var aliased))
+            {
+                mapInternalName = aliased;
+            }
+
+            // Diagnostic: the first few lookups tell us which shape this game build reports.
+            if (!string.IsNullOrEmpty(rawLocation) && _locationLogCount < 3)
+            {
+                _locationLogCount++;
+                Plugin.Log.LogInfo($"DynamicMaps: map internal name '{mapInternalName}' (raw location '{rawLocation}')");
+            }
+
+            return mapInternalName;
         }
         
         public static Player GetMainPlayer()

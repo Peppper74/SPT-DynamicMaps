@@ -456,3 +456,7 @@ $RECYCLE.BIN/
 
 # auto generated files specific to this project
 Version.cs
+
+# port working materials: analysis reports, decompiled game code, probe scripts
+analysis/
+Анализ-проекта.md

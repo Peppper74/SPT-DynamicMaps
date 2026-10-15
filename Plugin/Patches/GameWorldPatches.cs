@@ -24,6 +24,11 @@ namespace DynamicMaps.Patches
         {
             GameWorldOnDestroyPatch.Attach();
 
+            // make sure the watcher runs from the start of the raid, so the mini-map does not
+            // wait for the inventory screen to be opened
+            Plugin.Instance?.EnsureWatcher();
+            Plugin.Instance?.EnsurePeekAttached();
+
             // Credit to RaiRai for finding the hidden stash names
             var caches = LocationScene.GetAllObjects<LootableContainer>()
                 .Where( x => 
