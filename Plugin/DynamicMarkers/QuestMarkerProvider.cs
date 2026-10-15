@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using DynamicMaps.Data;
 using DynamicMaps.DynamicMarkers;
 using DynamicMaps.UI.Components;
@@ -54,12 +55,14 @@ namespace DynamicMaps
 
             var player = GameUtils.GetMainPlayer();
 
-            var markerDefs = QuestUtils.GetMarkerDefsForPlayer(player);
+            var markerDefs = QuestUtils.GetMarkerDefsForPlayer(player).ToList();
             foreach (var markerDef in markerDefs)
             {
                 var marker = map.AddMapMarker(markerDef);
                 _questMarkers.Add(marker);
             }
+
+            Plugin.Log.LogInfo($"DynamicMaps quest markers: {markerDefs.Count} marker(s) for the current map");
         }
 
         private void TryRemoveMarkers()

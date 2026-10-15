@@ -143,6 +143,7 @@ namespace DynamicMaps.UI.Components
             IsPeeking = true;
             
             // attach map screen to peek mask
+            MapScreen.UseOverlayCanvasSorting();
             MapScreen.transform.SetParent(RectTransform);
             MapScreen.Show(playAnimation);
             MapScreen.DumpRenderState("peek");
@@ -175,6 +176,7 @@ namespace DynamicMaps.UI.Components
             // just in case something else is attached and tries to be in front
             transform.SetAsLastSibling();
             
+            MapScreen.UseOverlayCanvasSorting();
             MapScreen.transform.SetParent(RectTransform);
             MapScreen.Show(playAnimation);
             MapScreen.DumpRenderState("mini-map");

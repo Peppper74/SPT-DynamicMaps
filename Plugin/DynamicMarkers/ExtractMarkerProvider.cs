@@ -100,15 +100,17 @@ namespace DynamicMaps.DynamicMarkers
             if (GameUtils.IsScavRaid())
             {
                 extracts = gameWorld.ExfiltrationController.ScavExfiltrationPoints
-                                .Where(p => p.isActiveAndEnabled && p.InfiltrationMatch(player));
+                                .Where(p => p != null && p.InfiltrationMatch(player));
             }
             else
             {
                 extracts = gameWorld.ExfiltrationController.ExfiltrationPoints
-                                .Where(p => p.isActiveAndEnabled && p.InfiltrationMatch(player));
+                                .Where(p => p != null && p.InfiltrationMatch(player));
             }
 
-            // add markers, only this single time
+            // Markers are added once per raid, so every extract of this raid is included even if it
+            // is not active yet (on Labs they are activated during the raid); the colour follows the
+            // extract status - closed, requirements or open - and is updated by the status event.
             foreach (var extract in extracts)
             {
                 TryAddMarker(map, extract);

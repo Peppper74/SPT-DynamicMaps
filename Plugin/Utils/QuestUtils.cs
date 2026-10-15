@@ -61,20 +61,15 @@ namespace DynamicMaps.Utils
             {
                 try
                 {
-                    var lootItems = Traverse.Create(gameWorld)
-                        .Field("LootItems")
-                        .Field("_iteration")
-                        .GetValue<List<LootItem>>();
+                    // GameWorld.LootItems is a hydra dictionary whose internals differ between builds
+                    // (reflection into "_iteration" returned nothing on SPT 5), so the quest items are
+                    // taken from the plain loot list - the same source the loot markers already use.
+                    QuestItems = gameWorld.LootList?
+                        .OfType<LootItem>()
+                        .Where(i => i?.Item?.QuestItem == true)
+                        .ToList() ?? new List<LootItem>();
 
-                    if (lootItems == null)
-                    {
-                        Plugin.Log.LogWarning("Quest loot list is unavailable in this SPT build; continuing without quest-item markers.");
-                        QuestItems = new List<LootItem>();
-                    }
-                    else
-                    {
-                        QuestItems = lootItems.Where(i => i?.Item?.QuestItem == true).ToList();
-                    }
+                    Plugin.Log.LogInfo($"Quest items found in raid: {QuestItems.Count}");
                 }
                 catch (System.Exception e)
                 {
@@ -253,9 +248,31 @@ namespace DynamicMaps.Utils
                                                                   string conditionDescription)
         {
             var zones = TriggersWithIds?.GetZoneTriggers(zoneId);
+            if (zones == null)
+            {
+                yield break;
+            }
+
             foreach (var zone in zones)
             {
-                yield return MathUtils.ConvertToMapPosition(zone.transform.position);
+                Vector3 zonePosition;
+                try
+                {
+                    // triggers of a previous location are destroyed while the list still holds them
+                    if (zone == null)
+                    {
+                        continue;
+                    }
+
+                    zonePosition = zone.transform.position;
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.LogWarning($"Quest zone '{zoneId}' is gone, skipping ({e.Message})");
+                    continue;
+                }
+
+                yield return MathUtils.ConvertToMapPosition(zonePosition);
             }
         }
 
@@ -265,9 +282,30 @@ namespace DynamicMaps.Utils
             foreach (var questItemId in questItemIds)
             {
                 var questItems = QuestItems?.Where(i => i.TemplateId == questItemId);
+                if (questItems == null)
+                {
+                    continue;
+                }
+
                 foreach (var item in questItems)
                 {
-                    yield return MathUtils.ConvertToMapPosition(item.transform.position);
+                    Vector3 itemPosition;
+                    try
+                    {
+                        if (item == null)
+                        {
+                            continue;
+                        }
+
+                        itemPosition = item.transform.position;
+                    }
+                    catch (Exception e)
+                    {
+                        Plugin.Log.LogWarning($"Quest item '{questItemId}' is gone, skipping ({e.Message})");
+                        continue;
+                    }
+
+                    yield return MathUtils.ConvertToMapPosition(itemPosition);
                 }
             }
         }

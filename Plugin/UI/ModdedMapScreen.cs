@@ -420,6 +420,24 @@ namespace DynamicMaps.UI
             }
         }
 
+        /// <summary>
+        /// Called when the map is shown as an overlay (peek or mini-map). A nested canvas that
+        /// overrides the sorting order is NOT clipped by the mod's mask, so the mini-map content
+        /// spilled over the whole screen after the inventory map had set the override.
+        /// </summary>
+        internal void UseOverlayCanvasSorting()
+        {
+            var canvas = _mapView.GetComponent<Canvas>();
+            if (canvas == null)
+            {
+                return;
+            }
+
+            canvas.overrideSorting = false;
+            canvas.sortingOrder = 0;
+            canvas.enabled = true;
+        }
+
         internal void Show(bool playAnimation)
         {
             if (!_initialized)
